@@ -4,36 +4,12 @@ use crate::*;
 
 #[near]
 impl Contract {
-    // Helper function to unsubscribe a user
-    pub(crate) fn internal_unsubscribe(&mut self, account_id: AccountId) {
-        let user = self.get_user_mut(account_id);
-        require!(
-            user.unsubscribe_state.is_some(),
-            "User has already unsubscribed"
-        );
-
-        // If the user unsubscribes before paying for the current period
-        // then we set the unsubscribe state to NextPeriod
-        // otherwise we set it to Now
-        if user.next_payment_due >= env::block_timestamp() {
-            user.unsubscribe_state = Some(UnsubscribeState::NextPeriod);
-        } else {
-            user.unsubscribe_state = Some(UnsubscribeState::Now);
-        }
-    }
-
     // Helper function to get the relevent user as a reference
-    pub(crate) fn get_user(&self, user: &AccountId) -> &SubscriptionInfo {
+    pub(crate) fn get_next_payment(&self, user: &AccountId) -> NextPaymentDue {
         self.subscribers
             .get(user)
             .unwrap_or_else(|| panic!("User is not subscribed"))
-    }
-
-    // Helper function to get the relevent user as a mutable reference
-    pub(crate) fn get_user_mut(&mut self, user: AccountId) -> &mut SubscriptionInfo {
-        self.subscribers
-            .get_mut(&user)
-            .unwrap_or_else(|| panic!("User is not subscribed"))
+            .clone()
     }
 }
 

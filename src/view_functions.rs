@@ -4,15 +4,14 @@ use crate::*;
 pub struct SubscriptionView {
     pub account_id: AccountId,
     pub next_payment_due: U64,
-    pub unsubscribe_state: Option<UnsubscribeState>,
 }
 
 #[near]
 impl Contract {
     // View the subscription information for a user
     pub fn view_user(&self, account_id: AccountId) -> SubscriptionView {
-        let subscription_info = self.get_user(&account_id);
-        self.format_subscription(account_id, subscription_info)
+        let next_payment_due = self.get_next_payment(&account_id);
+        self.format_subscription(account_id, next_payment_due)
     }
 
     // View a number of user's subscription information
@@ -30,7 +29,7 @@ impl Contract {
             .skip(from as usize)
             .take(limit as usize)
             .map(|(account_id, subscription_info)| {
-                self.format_subscription(account_id.clone(), subscription_info)
+                self.format_subscription(account_id.clone(), subscription_info.clone())
             })
             .collect()
     }
@@ -39,12 +38,11 @@ impl Contract {
     fn format_subscription(
         &self,
         account_id: AccountId,
-        subscription_info: &SubscriptionInfo,
+        next_payment_due: NextPaymentDue,
     ) -> SubscriptionView {
         SubscriptionView {
             account_id,
-            next_payment_due: U64(subscription_info.next_payment_due),
-            unsubscribe_state: subscription_info.unsubscribe_state.clone(),
+            next_payment_due: U64(next_payment_due),
         }
     }
 }

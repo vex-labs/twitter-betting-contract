@@ -33,15 +33,27 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .transact()
         .await?;
 
-    assert!(result.is_success(), "Contract initialization failed: {:?}", dbg!(result));
+    assert!(
+        result.is_success(),
+        "Contract initialization failed: {:?}",
+        dbg!(result)
+    );
 
     // Start subscription for alice
     result = subscribe(alice, &contract_account.id()).await?;
-    assert!(result.is_success(), "Alice's subscription failed: {:?}", dbg!(result));
+    assert!(
+        result.is_success(),
+        "Alice's subscription failed: {:?}",
+        dbg!(result)
+    );
 
     // Start subscription for bob
     result = subscribe(bob, &contract_account.id()).await?;
-    assert!(result.is_success(), "Bob's subscription failed: {:?}", dbg!(result));
+    assert!(
+        result.is_success(),
+        "Bob's subscription failed: {:?}",
+        dbg!(result)
+    );
 
     Ok(())
 }

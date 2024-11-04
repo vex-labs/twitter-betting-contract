@@ -30,17 +30,11 @@ impl Contract {
             "Only admin can charge subscription"
         );
 
-        let user = self.get_user(&account_id);
+        let next_payment_due = self.get_next_payment(&account_id);
         require!(
-            user.next_payment_due > env::block_timestamp(),
+            next_payment_due > env::block_timestamp(),
             "User has already paid for this period"
         );
-
-        // If the user unsubscribed for this period then remove them from the subscribers list
-        if matches!(user.unsubscribe_state, Some(UnsubscribeState::Now)) {
-            self.subscribers.remove(&account_id);
-            return PromiseOrValue::Value("User has unsubscribed".to_string());
-        }
 
         // Prepare function call action
         let function_call_action = Action::FunctionCall(Box::new(FunctionCallAction {

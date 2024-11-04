@@ -13,39 +13,19 @@ pub mod view_functions;
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
 pub struct Contract {
-    subscribers: IterableMap<AccountId, SubscriptionInfo>,
+    subscribers: IterableMap<AccountId, NextPaymentDue>,
     period_length: u64,
     admin: AccountId,
     mpc_contract: AccountId,
 }
 
-#[near(serializers = [borsh])]
-pub struct SubscriptionInfo {
-    next_payment_due: u64,
-    unsubscribe_state: Option<UnsubscribeState>,
-}
-
-impl SubscriptionInfo {
-    pub fn new(period_length: u64) -> Self {
-        Self {
-            next_payment_due: env::block_timestamp() + period_length,
-            unsubscribe_state: None,
-        }
-    }
-}
+type NextPaymentDue = u64; // Type alias
 
 #[near(serializers = [json])]
 pub struct TransactionInput {
     target_public_key: String,
     nonce: U64,
     block_hash: String,
-}
-
-#[derive(Clone)]
-#[near(serializers = [json, borsh])]
-pub enum UnsubscribeState {
-    Now,
-    NextPeriod,
 }
 
 #[near]
@@ -68,7 +48,7 @@ impl Contract {
         // Insert the new subscription but panic if the account is already subscribed
         if self
             .subscribers
-            .insert(account_id, SubscriptionInfo::new(self.period_length))
+            .insert(account_id, env::block_timestamp())
             .is_some()
         {
             panic!("You are already subscribed");
@@ -76,7 +56,7 @@ impl Contract {
     }
 
     // Function to pay the subscription
-    // Transaction sent to call this should be signed by the MPC
+    // the transaction sent to call this should be signed by the MPC
     #[payable]
     pub fn pay_subscription(&mut self) {
         require!(
@@ -84,42 +64,16 @@ impl Contract {
             "Attached deposit must be 10"
         );
 
-        // Get period length early to avoid borrowing issues
-        let period_length = self.period_length;
+        let account_id = env::predecessor_account_id();
 
-        let user = self.get_user_mut(env::predecessor_account_id());
+        let mut next_payment_due = self.get_next_payment(&account_id);
         require!(
-            user.next_payment_due <= env::block_timestamp(),
+            next_payment_due <= env::block_timestamp(),
             "Payment is not due yet"
         );
-        user.next_payment_due = user.next_payment_due + period_length;
 
-        // If the user wanted to unsubscribe before paying for that period
-        // then we set the unsubscribe state to Now
-        if matches!(user.unsubscribe_state, Some(UnsubscribeState::NextPeriod)) {
-            user.unsubscribe_state = Some(UnsubscribeState::Now);
-        }
-    }
-
-    // Function to let a user unsubscribe
-    pub fn user_unsubscribe(&mut self) {
-        self.internal_unsubscribe(env::predecessor_account_id());
-    }
-
-    // Function for the admin to cancel a user's subscription
-    pub fn cancel_user_subscription(&mut self, user: AccountId) {
-        require!(
-            env::predecessor_account_id() == self.admin,
-            "Only admin can cancel subscription"
-        );
-        let unsub_user = self.get_user(&user);
-
-        // If the user can be unsubscribed immediately then remove them from the map
-        // otherwise proceed with the internal unsubscribe
-        if matches!(unsub_user.unsubscribe_state, Some(UnsubscribeState::Now)) {
-            self.subscribers.remove(&user);
-        } else {
-            self.internal_unsubscribe(user);
-        }
+        // Update the next payment due date
+        next_payment_due += self.period_length;
+        self.subscribers.insert(account_id, next_payment_due);
     }
 }
