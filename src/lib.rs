@@ -1,13 +1,17 @@
 use near_sdk::json_types::U64;
 use near_sdk::store::IterableMap;
-use near_sdk::{env, near, require, AccountId, NearToken, serde_json, PromiseOrValue, Gas, PromiseError};
+use near_sdk::{
+    env, near, require, serde_json, AccountId, Gas, NearToken, PanicOnDefault, PromiseError,
+    PromiseOrValue,
+};
 
-pub mod internal_functions;
-pub mod view_functions;
-pub mod signer;
 pub mod charge_subscription;
+pub mod internal_functions;
+pub mod signer;
+pub mod view_functions;
 
 #[near(contract_state)]
+#[derive(PanicOnDefault)]
 pub struct Contract {
     subscribers: IterableMap<AccountId, SubscriptionInfo>,
     period_length: u64,
@@ -15,7 +19,7 @@ pub struct Contract {
     mpc_contract: AccountId,
 }
 
-#[near(serializers = [json, borsh])]
+#[near(serializers = [borsh])]
 pub struct SubscriptionInfo {
     next_payment_due: u64,
     unsubscribe_state: Option<UnsubscribeState>,

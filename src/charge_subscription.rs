@@ -1,33 +1,40 @@
-use internal_functions::hash_payload;
 use hex::FromHex;
-use omni_transaction::transaction_builder::{TransactionBuilder, TxBuilder};
-use omni_transaction::types::NEAR;
-use omni_transaction::near::utils::PublicKeyStrExt;
+use internal_functions::hash_payload;
 use omni_transaction::near::near_transaction::NearTransaction;
 use omni_transaction::near::types::{
-    Action, FunctionCallAction, Secp256K1Signature, Signature,
-    U64 as OmniU64, U128 as OmniU128,
-};  
-  
+    Action, FunctionCallAction, Secp256K1Signature, Signature, U128 as OmniU128, U64 as OmniU64,
+};
+use omni_transaction::near::utils::PublicKeyStrExt;
+use omni_transaction::transaction_builder::{TransactionBuilder, TxBuilder};
+use omni_transaction::types::NEAR;
+
 use crate::signer::*;
 use crate::*;
 
 const OMNI_GAS: OmniU64 = OmniU64(30_000_000_000_000); // 30 Tgas
 const OMNI_DEPOSIT: OmniU128 = OmniU128(10_000_000_000_000_000_000_000_000); // 10 NEAR
-const SIGN_CALLBACK_GAS: Gas = Gas::from_tgas(50); 
+const SIGN_CALLBACK_GAS: Gas = Gas::from_tgas(50);
 
 #[near]
 impl Contract {
     // Charge subscription to the user
     #[payable]
-    pub fn charge_subscription(&mut self, account_id: AccountId, transaction_input: TransactionInput, mpc_deposit: NearToken) -> PromiseOrValue<String> {
+    pub fn charge_subscription(
+        &mut self,
+        account_id: AccountId,
+        transaction_input: TransactionInput,
+        mpc_deposit: NearToken,
+    ) -> PromiseOrValue<String> {
         require!(
             env::predecessor_account_id() == self.admin,
             "Only admin can charge subscription"
         );
 
         let user = self.get_user(&account_id);
-        require!(user.next_payment_due > env::block_timestamp(), "User has already paid for this period");
+        require!(
+            user.next_payment_due > env::block_timestamp(),
+            "User has already paid for this period"
+        );
 
         // If the user unsubscribed for this period then remove them from the subscribers list
         if matches!(user.unsubscribe_state, Some(UnsubscribeState::Now)) {
@@ -63,7 +70,7 @@ impl Contract {
         // Serialize transaction into a string to pass into callback
         let serialized_tx = serde_json::to_string(&near_tx)
             .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e));
-        
+
         // Call MPC contraCT
         PromiseOrValue::Promise(
             ext_signer::ext(self.mpc_contract.clone())
@@ -79,7 +86,7 @@ impl Contract {
                     Self::ext(env::current_account_id())
                         .with_static_gas(SIGN_CALLBACK_GAS)
                         .with_unused_gas_weight(0)
-                        .sign_callback(serialized_tx, account_id),
+                        .sign_callback(serialized_tx),
                 ),
         )
     }
@@ -90,7 +97,6 @@ impl Contract {
         &self,
         #[callback_result] result: Result<SignResult, PromiseError>,
         serialized_tx: String,
-        account_id: AccountId,
     ) -> Vec<u8> {
         if let Ok(sign_result) = result {
             // Get r and s from the sign result

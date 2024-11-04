@@ -1,5 +1,6 @@
 use crate::*;
 
+#[near(serializers = [json])]
 pub struct SubscriptionView {
     pub account_id: AccountId,
     pub next_payment_due: U64,
@@ -15,8 +16,11 @@ impl Contract {
     }
 
     // View a number of user's subscription information
-    pub fn view_users(&self, from_index: &Option<u32>, limit: &Option<u32>) -> Vec<SubscriptionView> {
-        
+    pub fn view_users(
+        &self,
+        from_index: &Option<u32>,
+        limit: &Option<u32>,
+    ) -> Vec<SubscriptionView> {
         // If no index or limit is provided then return all users
         let from = from_index.unwrap_or(0);
         let limit = limit.unwrap_or(self.subscribers.len());
@@ -25,12 +29,18 @@ impl Contract {
             .iter()
             .skip(from as usize)
             .take(limit as usize)
-            .map(|(account_id, subscription_info)| self.format_subscription(account_id.clone(), subscription_info))
+            .map(|(account_id, subscription_info)| {
+                self.format_subscription(account_id.clone(), subscription_info)
+            })
             .collect()
     }
 
     // Format the subscription information with the account_id
-    fn format_subscription(&self, account_id: AccountId, subscription_info: &SubscriptionInfo) -> SubscriptionView {
+    fn format_subscription(
+        &self,
+        account_id: AccountId,
+        subscription_info: &SubscriptionInfo,
+    ) -> SubscriptionView {
         SubscriptionView {
             account_id,
             next_payment_due: U64(subscription_info.next_payment_due),
@@ -38,4 +48,3 @@ impl Contract {
         }
     }
 }
-
