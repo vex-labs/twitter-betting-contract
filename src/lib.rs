@@ -1,55 +1,121 @@
-// Find all our documentation at https://docs.near.org
-use near_sdk::{log, near};
+use near_sdk::json_types::U64;
+use near_sdk::store::IterableMap;
+use near_sdk::{env, near, require, AccountId, NearToken, serde_json, PromiseOrValue, Gas, PromiseError};
 
-// Define the contract structure
+pub mod internal_functions;
+pub mod view_functions;
+pub mod signer;
+pub mod charge_subscription;
+
 #[near(contract_state)]
 pub struct Contract {
-    greeting: String,
+    subscribers: IterableMap<AccountId, SubscriptionInfo>,
+    period_length: u64,
+    admin: AccountId,
+    mpc_contract: AccountId,
 }
 
-// Define the default, which automatically initializes the contract
-impl Default for Contract {
-    fn default() -> Self {
+#[near(serializers = [json, borsh])]
+pub struct SubscriptionInfo {
+    next_payment_due: u64,
+    unsubscribe_state: Option<UnsubscribeState>,
+}
+
+impl SubscriptionInfo {
+    pub fn new(period_length: u64) -> Self {
         Self {
-            greeting: "Hello".to_string(),
+            next_payment_due: env::block_timestamp() + period_length,
+            unsubscribe_state: None,
         }
     }
 }
 
-// Implement the contract structure
-#[near]
-impl Contract {
-    // Public method - returns the greeting saved, defaulting to DEFAULT_GREETING
-    pub fn get_greeting(&self) -> String {
-        self.greeting.clone()
-    }
-
-    // Public method - accepts a greeting, such as "howdy", and records it
-    pub fn set_greeting(&mut self, greeting: String) {
-        log!("Saving greeting: {greeting}");
-        self.greeting = greeting;
-    }
+#[near(serializers = [json])]
+pub struct TransactionInput {
+    target_public_key: String,
+    nonce: U64,
+    block_hash: String,
 }
 
-/*
- * The rest of this file holds the inline tests for the code above
- * Learn more about Rust tests: https://doc.rust-lang.org/book/ch11-01-writing-tests.html
- */
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Clone)]
+#[near(serializers = [json, borsh])]
+pub enum UnsubscribeState {
+    Now,
+    NextPeriod,
+}
 
-    #[test]
-    fn get_default_greeting() {
-        let contract = Contract::default();
-        // this test did not call set_greeting so should return the default "Hello" greeting
-        assert_eq!(contract.get_greeting(), "Hello");
+#[near]
+impl Contract {
+    #[init]
+    #[private]
+    pub fn init(period_length: U64, admin: AccountId, mpc_contract: AccountId) -> Self {
+        Self {
+            subscribers: IterableMap::new(b"s"),
+            period_length: period_length.into(),
+            admin,
+            mpc_contract,
+        }
     }
 
-    #[test]
-    fn set_then_get_greeting() {
-        let mut contract = Contract::default();
-        contract.set_greeting("howdy".to_string());
-        assert_eq!(contract.get_greeting(), "howdy");
+    // Create a new subscription
+    pub fn start_subscription(&mut self) {
+        let account_id = env::predecessor_account_id();
+
+        // Insert the new subscription but panic if the account is already subscribed
+        if self
+            .subscribers
+            .insert(account_id, SubscriptionInfo::new(self.period_length))
+            .is_some()
+        {
+            panic!("You are already subscribed");
+        }
+    }
+
+    // Function to pay the subscription
+    // Transaction sent to call this should be signed by the MPC
+    #[payable]
+    pub fn pay_subscription(&mut self) {
+        require!(
+            env::attached_deposit() == NearToken::from_near(10),
+            "Attached deposit must be 10"
+        );
+
+        // Get period length early to avoid borrowing issues
+        let period_length = self.period_length;
+
+        let user = self.get_user_mut(env::predecessor_account_id());
+        require!(
+            user.next_payment_due <= env::block_timestamp(),
+            "Payment is not due yet"
+        );
+        user.next_payment_due = user.next_payment_due + period_length;
+
+        // If the user wanted to unsubscribe before paying for that period
+        // then we set the unsubscribe state to Now
+        if matches!(user.unsubscribe_state, Some(UnsubscribeState::NextPeriod)) {
+            user.unsubscribe_state = Some(UnsubscribeState::Now);
+        }
+    }
+
+    // Function to let a user unsubscribe
+    pub fn user_unsubscribe(&mut self) {
+        self.internal_unsubscribe(env::predecessor_account_id());
+    }
+
+    // Function for the admin to cancel a user's subscription
+    pub fn cancel_user_subscription(&mut self, user: AccountId) {
+        require!(
+            env::predecessor_account_id() == self.admin,
+            "Only admin can cancel subscription"
+        );
+        let unsub_user = self.get_user(&user);
+
+        // If the user can be unsubscribed immediately then remove them from the map
+        // otherwise proceed with the internal unsubscribe
+        if matches!(unsub_user.unsubscribe_state, Some(UnsubscribeState::Now)) {
+            self.subscribers.remove(&user);
+        } else {
+            self.internal_unsubscribe(user);
+        }
     }
 }
