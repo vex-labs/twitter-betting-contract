@@ -2,6 +2,7 @@ const { base_encode, base_decode } = require('near-api-js/lib/utils/serialize');
 const EC = require('elliptic').ec;
 const { sha3_256 } = require('js-sha3');
 
+// Public key of the MPC contract
 const rootPublicKey = 'secp256k1:4NfTiv3UsGahebgTaHyD9vF8KYKMBnfd6kh94mK6xv8fGBiJB8TBtFMP5WWXz6B89Ac1fbpzPwAvoyQebemHFwx3';
 
 async function deriveKey(PROXY_CONTRACT, derivation_path) {

@@ -33,7 +33,7 @@ async function main() {
     // Get the public on the subscriber account that the MPC has control over
     const publicKey = await deriveKey(contractAccountId, subscriberAccountId);
 
-    // Get the nonce of the keys 
+    // Get the nonce of the key
     const accessKey = await near.connection.provider.query({
         request_type: 'view_access_key',
         account_id: subscriberAccountId,
@@ -48,7 +48,7 @@ async function main() {
     });
     const blockHash = block.header.hash;
 
-    // Prepare input
+    // Prepare transaction input
     const transaction_input = {
         target_public_key: publicKey,
         nonce: (nonce + 1).toString(),
@@ -64,7 +64,7 @@ async function main() {
             transaction_input,
         },
         gas: "300000000000000",
-        attachedDeposit: 500000000000000000000000, // 0.5 NEAR is morrreee than enough
+        attachedDeposit: "500000000000000000000000", // 0.5 NEAR is morrreee than enough
     })
 
     // Get the signed transaction from the outcome
