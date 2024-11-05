@@ -12,7 +12,7 @@ use crate::signer::*;
 use crate::*;
 
 const OMNI_GAS: OmniU64 = OmniU64(30_000_000_000_000); // 30 Tgas
-const OMNI_DEPOSIT: OmniU128 = OmniU128(10_000_000_000_000_000_000_000_000); // 10 NEAR
+const OMNI_DEPOSIT: OmniU128 = OmniU128(5_000_000_000_000_000_000_000_000); // 5 NEAR
 const SIGN_CALLBACK_GAS: Gas = Gas::from_tgas(50);
 
 #[near(serializers = [json])]
@@ -70,7 +70,7 @@ impl Contract {
         // Serialize transaction into a string to pass into callback
         let serialized_tx = serde_json::to_string(&near_tx)
             .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e))
-            .replace("1e25", "\"10000000000000000000000000\""); // Replace large scientific notations if necessary
+            .replace("5000000000000000000000000", "\"5000000000000000000000000\""); // Replace large scientific notations if necessary
 
         let mpc_deposit = env::attached_deposit();
 
