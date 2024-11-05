@@ -1,6 +1,6 @@
 [package]
 name = "subscription-example"
-description = "cargo-near-new-project-description"
+description = "An example showing how to use omni-transaction-rs for near"
 version = "0.1.0"
 edition = "2021"
 # TODO: Fill out the repository field to help NEAR ecosystem tools to discover your project.

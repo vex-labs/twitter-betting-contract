@@ -15,6 +15,13 @@ const OMNI_GAS: OmniU64 = OmniU64(30_000_000_000_000); // 30 Tgas
 const OMNI_DEPOSIT: OmniU128 = OmniU128(10_000_000_000_000_000_000_000_000); // 10 NEAR
 const SIGN_CALLBACK_GAS: Gas = Gas::from_tgas(50);
 
+#[near(serializers = [json])]
+pub struct TransactionInput {
+    target_public_key: String,
+    nonce: U64,
+    block_hash: String,
+}
+
 #[near]
 impl Contract {
     // Charge subscription to the user
@@ -31,7 +38,7 @@ impl Contract {
 
         let next_payment_due = self.get_next_payment(&account_id);
         require!(
-            next_payment_due > env::block_timestamp(),
+            env::block_timestamp() > next_payment_due,
             "User has already paid for this period"
         );
 
@@ -62,7 +69,8 @@ impl Contract {
 
         // Serialize transaction into a string to pass into callback
         let serialized_tx = serde_json::to_string(&near_tx)
-            .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e));
+            .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e))
+            .replace("1e25", "\"10000000000000000000000000\""); // Replace large scientific notations if necessary
 
         let mpc_deposit = env::attached_deposit();
 
@@ -117,7 +125,7 @@ impl Contract {
             let omni_signature = Signature::SECP256K1(Secp256K1Signature(signature_bytes));
 
             // Deserialize transaction
-            let near_tx: NearTransaction = serde_json::from_str(&serialized_tx)
+            let near_tx = serde_json::from_str::<NearTransaction>(&serialized_tx)
                 .unwrap_or_else(|e| panic!("Failed to deserialize NearTransaction: {:?}", e));
 
             // Add signature to transaction

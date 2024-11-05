@@ -1,0 +1,21 @@
+{
+    "name": "subscription-scripts",
+    "version": "1.0.0",
+    "scripts": {
+        "setup": "node ./utils/setup.js",
+        "subscribe": "node start-subscription.js",
+        "unsubscribe": "node end-subscription.js",
+        "charge": "node charge-subscription.js"
+      },
+    "dependencies": {
+      "near-api-js": "^5.0.1",    
+      "os": "^0.1.1",
+      "path": "^0.12.7",
+      "keccak": "^3.0.4",
+      "elliptic": "^6.5.5",
+      "viem": "^2.18.4",
+      "bs58": "^5.0.0",
+      "dotenv": "^16.4.5",
+      "js-sha3": "0.9.3"
+    }
+}

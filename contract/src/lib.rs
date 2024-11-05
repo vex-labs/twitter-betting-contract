@@ -2,7 +2,7 @@ use near_sdk::json_types::U64;
 use near_sdk::store::IterableMap;
 use near_sdk::{
     env, near, require, serde_json, AccountId, Gas, NearToken, PanicOnDefault, PromiseError,
-    PromiseOrValue,
+    PromiseOrValue
 };
 
 pub mod charge_subscription;
@@ -20,13 +20,6 @@ pub struct Contract {
 }
 
 type NextPaymentDue = u64; // Type alias
-
-#[near(serializers = [json])]
-pub struct TransactionInput {
-    target_public_key: String,
-    nonce: U64,
-    block_hash: String,
-}
 
 #[near]
 impl Contract {

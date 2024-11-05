@@ -1,1 +1,4 @@
-/target
+/contract/target/
+/contract/Cargo.lock
+/scripts/node_modules/
+/scripts/utils/.env
