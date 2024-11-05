@@ -2,7 +2,7 @@ use near_sdk::json_types::U64;
 use near_sdk::store::IterableMap;
 use near_sdk::{
     env, near, require, serde_json, AccountId, Gas, NearToken, PanicOnDefault, PromiseError,
-    PromiseOrValue
+    PromiseOrValue,
 };
 
 pub mod charge_subscription;

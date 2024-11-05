@@ -70,7 +70,7 @@ impl Contract {
         // Serialize transaction into a string to pass into callback
         let serialized_tx = serde_json::to_string(&near_tx)
             .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e))
-            .replace("5000000000000000000000000", "\"5000000000000000000000000\""); // Replace large scientific notations if necessary
+            .replace("5000000000000000000000000", "\"5000000000000000000000000\""); // Temp fix
 
         let mpc_deposit = env::attached_deposit();
 
