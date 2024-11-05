@@ -23,7 +23,6 @@ impl Contract {
         &mut self,
         account_id: AccountId,
         transaction_input: TransactionInput,
-        mpc_deposit: NearToken,
     ) -> PromiseOrValue<String> {
         require!(
             env::predecessor_account_id() == self.admin,
@@ -65,7 +64,9 @@ impl Contract {
         let serialized_tx = serde_json::to_string(&near_tx)
             .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e));
 
-        // Call MPC contraCT
+        let mpc_deposit = env::attached_deposit();
+
+        // Call MPC contract
         PromiseOrValue::Promise(
             ext_signer::ext(self.mpc_contract.clone())
                 .with_attached_deposit(mpc_deposit)
