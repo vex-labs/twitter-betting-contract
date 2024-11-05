@@ -22,7 +22,6 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     // Deploy MPC contract
 
-
     // Deploy and initialize contract
     let contract_wasm = near_workspaces::compile_project("./").await?;
     let contract = contract_account.deploy(&contract_wasm).await?.unwrap();
@@ -69,8 +68,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     // This will actually be fair bit of effort to do in tests
     // We need to deploy a mock mpc contract
-    // We need to derive a secp256k1 key in workspaces, find the relevant rust libraries 
-    // Need to add the key 
+    // We need to derive a secp256k1 key in workspaces, find the relevant rust libraries
+    // Need to add the key
     // Need to send the transaction to the sandbox environment
 
     Ok(())

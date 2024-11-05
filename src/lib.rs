@@ -58,11 +58,7 @@ impl Contract {
     pub fn end_subscription(&mut self) {
         let account_id = env::predecessor_account_id();
 
-        if self
-            .subscribers
-            .remove(&account_id)
-            .is_none()
-        {
+        if self.subscribers.remove(&account_id).is_none() {
             panic!("You are not subscribed");
         }
     }

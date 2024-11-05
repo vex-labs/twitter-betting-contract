@@ -117,7 +117,7 @@ impl Contract {
             let omni_signature = Signature::SECP256K1(Secp256K1Signature(signature_bytes));
 
             // Deserialize transaction
-            let near_tx = serde_json::from_str::<NearTransaction>(&serialized_tx)
+            let near_tx: NearTransaction = serde_json::from_str(&serialized_tx)
                 .unwrap_or_else(|e| panic!("Failed to deserialize NearTransaction: {:?}", e));
 
             // Add signature to transaction
