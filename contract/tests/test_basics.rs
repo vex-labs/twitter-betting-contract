@@ -43,7 +43,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         dbg!(result)
     );
 
-    // Derive secp256k1 key for alice's subscription 
+    // Derive secp256k1 key for alice's subscription
     let epsilon = derive_epsilon(&alice.id(), "subscription");
     println!("Epsilon: {:?}", epsilon);
 
@@ -73,12 +73,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         dbg!(result)
     );
 
-
-
     // Need to add the key
     // Need to send the transaction to the sandbox environment
-
-
 
     Ok(())
 }
@@ -94,14 +90,12 @@ async fn create_account(root: &near_workspaces::Account, name: &str) -> Result<A
     Ok(subaccount)
 }
 
-
 fn derive_public_key(path: String, predecessor: AccountId) -> PublicKey {
     let epsilon = derive_epsilon(&predecessor, &path);
 }
 
 // pub fn derive_epsilon(predecessor_id: &AccountId, path: &str) -> Scalar {
 //     const EPSILON_DERIVATION_PREFIX: &str = "epsilon:";
-
 
 //     let derivation_path = format!("{EPSILON_DERIVATION_PREFIX}{},{}", predecessor_id, path);
 //     let mut hasher = Sha3_256::new();
