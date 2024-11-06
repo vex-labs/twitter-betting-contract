@@ -17,7 +17,7 @@ const SIGN_CALLBACK_GAS: Gas = Gas::from_tgas(50);
 
 #[near(serializers = [json])]
 pub struct TransactionInput {
-    target_public_key: String,
+    subscriber_public_key: String,
     nonce: U64,
     block_hash: String,
 }
@@ -56,7 +56,7 @@ impl Contract {
         // Build the transaction
         let near_tx = TransactionBuilder::new::<NEAR>()
             .signer_id(account_id.to_string())
-            .signer_public_key(transaction_input.target_public_key.to_public_key().unwrap())
+            .signer_public_key(transaction_input.subscriber_public_key.to_public_key().unwrap())
             .nonce(transaction_input.nonce.0)
             .receiver_id(env::current_account_id().to_string())
             .block_hash(transaction_input.block_hash.to_block_hash().unwrap())

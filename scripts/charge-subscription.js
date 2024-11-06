@@ -50,7 +50,7 @@ async function main() {
 
     // Prepare transaction input
     const transaction_input = {
-        target_public_key: publicKey,
+        subscriber_public_key: publicKey,
         nonce: (nonce + 1).toString(),
         block_hash: blockHash,
     };
