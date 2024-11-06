@@ -62,7 +62,7 @@ impl Contract {
     pub fn pay_subscription(&mut self) {
         require!(
             env::attached_deposit() == NearToken::from_near(5),
-            "Attached deposit must be 10"
+            "Attached deposit must be 5 NEAR"
         );
 
         let account_id = env::predecessor_account_id();
