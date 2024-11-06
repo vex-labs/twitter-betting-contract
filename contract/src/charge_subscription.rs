@@ -62,34 +62,35 @@ impl Contract {
             .block_hash(transaction_input.block_hash.to_block_hash().unwrap())
             .actions(actions)
             .build();
-
-        // Get the transaction payload and hash it
-        let payload = near_tx.build_for_signing();
-        let hashed_payload = hash_payload(&payload);
-
+        
         // Serialize transaction into a string to pass into callback
-        let serialized_tx = serde_json::to_string(&near_tx)
+        let tx_json_string = serde_json::to_string(&near_tx)
             .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e))
             .replace("5000000000000000000000000", "\"5000000000000000000000000\""); // Temp fix
 
+        // Create the paylaod, hash it and convert to a 32-byte array
+        let payload = near_tx.build_for_signing();
+        let hashed_payload = hash_payload(&payload);
+        let mpc_payload: [u8; 32]  = hashed_payload.try_into().unwrap_or_else(|e| panic!("Failed to convert payload {:?}", e));
+
         let mpc_deposit = env::attached_deposit();
+        let key_version = 0;
+        let path = account_id.to_string();
 
         // Call MPC contract
         PromiseOrValue::Promise(
             ext_signer::ext(self.mpc_contract.clone())
                 .with_attached_deposit(mpc_deposit)
                 .sign(SignRequest::new(
-                    hashed_payload
-                        .try_into()
-                        .unwrap_or_else(|e| panic!("Failed to convert payload {:?}", e)),
-                    account_id.to_string(),
-                    0,
+                    mpc_payload,
+                    path,
+                    key_version,
                 ))
                 .then(
                     Self::ext(env::current_account_id())
                         .with_static_gas(SIGN_CALLBACK_GAS)
                         .with_unused_gas_weight(0)
-                        .sign_callback(serialized_tx),
+                        .sign_callback(tx_json_string),
                 ),
         )
     }
@@ -99,9 +100,13 @@ impl Contract {
     pub fn sign_callback(
         &self,
         #[callback_result] result: Result<SignResult, PromiseError>,
-        serialized_tx: String,
+        tx_json_string: String,
     ) -> Vec<u8> {
         if let Ok(sign_result) = result {
+            // Deserialize transaction
+            let near_tx = serde_json::from_str::<NearTransaction>(&tx_json_string)
+                .unwrap_or_else(|e| panic!("Failed to deserialize transaction: {:?}", e));
+
             // Get r and s from the sign result
             let big_r = &sign_result.big_r.affine_point;
             let s = &sign_result.s.scalar;
@@ -123,10 +128,6 @@ impl Contract {
 
             // Create signature
             let omni_signature = Signature::SECP256K1(Secp256K1Signature(signature_bytes));
-
-            // Deserialize transaction
-            let near_tx = serde_json::from_str::<NearTransaction>(&serialized_tx)
-                .unwrap_or_else(|e| panic!("Failed to deserialize NearTransaction: {:?}", e));
 
             // Add signature to transaction
             let near_tx_signed = near_tx.build_with_signature(omni_signature);

@@ -5,8 +5,8 @@ const { sha3_256 } = require('js-sha3');
 // Public key of the MPC contract
 const rootPublicKey = 'secp256k1:4NfTiv3UsGahebgTaHyD9vF8KYKMBnfd6kh94mK6xv8fGBiJB8TBtFMP5WWXz6B89Ac1fbpzPwAvoyQebemHFwx3';
 
-async function deriveKey(PROXY_CONTRACT, derivation_path) {
-    const childPubKey = await deriveChildPublicKey(najPublicKeyStrToUncompressedHexPoint(), PROXY_CONTRACT, derivation_path);
+async function deriveKey(predessor_id, derivation_path) {
+    const childPubKey = await deriveChildPublicKey(najPublicKeyStrToUncompressedHexPoint(), predessor_id, derivation_path);
     return 'secp256k1:' + base_encode(Buffer.from(childPubKey.substring(2), 'hex'));
 }
 
