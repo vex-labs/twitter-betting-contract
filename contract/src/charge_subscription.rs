@@ -46,8 +46,8 @@ impl Contract {
         let function_call_action = Action::FunctionCall(Box::new(FunctionCallAction {
             method_name: "pay_subscription".to_string(),
             args: vec![],
-            gas: OMNI_GAS,
-            deposit: OMNI_DEPOSIT,
+            gas: OMNI_GAS, // TODO should be normal U64
+            deposit: OMNI_DEPOSIT, // TODO should be NearToken
         }));
 
         // Add the action to the actions vector
@@ -66,7 +66,7 @@ impl Contract {
         // Serialize transaction into a string to pass into callback
         let tx_json_string = serde_json::to_string(&near_tx)
             .unwrap_or_else(|e| panic!("Failed to serialize NearTransaction: {:?}", e))
-            .replace("5000000000000000000000000", "\"5000000000000000000000000\""); // Temp fix
+            .replace("5000000000000000000000000", "\"5000000000000000000000000\""); // TODO Temp fix
 
         // Create the paylaod, hash it and convert to a 32-byte array
         let payload = near_tx.build_for_signing();
