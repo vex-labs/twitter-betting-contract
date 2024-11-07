@@ -43,7 +43,7 @@ async function main() {
       args: {},
       gas: "300000000000000",
       attachedDeposit: 0,
-  })
+    })
 }
 
 main().catch(console.error);
