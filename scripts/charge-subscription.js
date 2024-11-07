@@ -69,11 +69,11 @@ async function main() {
 
     // Get the signed transaction from the outcome
     result = providers.getTransactionLastResult(outcome);
-    const signedSerializedTx = new Uint8Array(result);
+    const signedTx = new Uint8Array(result);
 
     // Send the signed transaction
     const send_result = await near.connection.provider.sendJsonRpc("broadcast_tx_commit", [
-        Buffer.from(signedSerializedTx).toString("base64"),
+        Buffer.from(signedTx).toString("base64"),
     ]);
     
     console.log(send_result);
