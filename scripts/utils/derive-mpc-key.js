@@ -5,8 +5,8 @@ const { sha3_256 } = require('js-sha3');
 // Public key of the MPC contract
 const rootPublicKey = 'secp256k1:4NfTiv3UsGahebgTaHyD9vF8KYKMBnfd6kh94mK6xv8fGBiJB8TBtFMP5WWXz6B89Ac1fbpzPwAvoyQebemHFwx3';
 
-async function deriveKey(predessor_id, derivation_path) {
-    const childPubKey = await deriveChildPublicKey(najPublicKeyStrToUncompressedHexPoint(), predessor_id, derivation_path);
+async function deriveKey(predecessorId, derivationPath) {
+    const childPubKey = await deriveChildPublicKey(najPublicKeyStrToUncompressedHexPoint(), predecessorId, derivationPath);
     return 'secp256k1:' + base_encode(Buffer.from(childPubKey.substring(2), 'hex'));
 }
 
@@ -17,12 +17,12 @@ function najPublicKeyStrToUncompressedHexPoint() {
 
 async function deriveChildPublicKey(
   parentUncompressedPublicKeyHex,
-  signerId,
+  predecessorId,
   path = ''
 ) {
   const ec = new EC("secp256k1");
   const scalarHex = sha3_256(
-    `near-mpc-recovery v0.1.0 epsilon derivation:${signerId},${path}`
+    `near-mpc-recovery v0.1.0 epsilon derivation:${predecessorId},${path}`
   );
 
   const x = parentUncompressedPublicKeyHex.substring(2, 66);

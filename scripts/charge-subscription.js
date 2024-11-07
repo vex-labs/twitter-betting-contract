@@ -30,7 +30,7 @@ async function main() {
     const near = await connect(connectionConfig);
     const adminAccount = await near.account(adminAccountId);
 
-    // Get the public on the subscriber account that the MPC has control over
+    // Get the subscription public key
     const publicKey = await deriveKey(contractAccountId, subscriberAccountId);
 
     // Get the nonce of the key
@@ -64,7 +64,7 @@ async function main() {
             transaction_input,
         },
         gas: "300000000000000",
-        attachedDeposit: "500000000000000000000000", // 0.5 NEAR is morrreee than enough
+        attachedDeposit: "100000000000000000000000", // 0.1 NEAR is enough in most cases
     })
 
     // Get the signed transaction from the outcome

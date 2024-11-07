@@ -29,10 +29,7 @@ async function main() {
     const near = await connect(connectionConfig);
     const subscriberAccount = await near.account(subscriberAccountId);
 
-    // Derive public key for the MPC to use
-    // This is a secp256k1 key as the MPC contract only uses this curve right now
-    // Predecessor to MPC contract is the proxy contract
-    // Path is the account Id of the account we are adding the new key to
+    // Get the subscription public key 
     const publicKey = await deriveKey(contractAccountId, subscriberAccountId);
         
     // Remove the public key from the subscriber account
