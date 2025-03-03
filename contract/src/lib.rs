@@ -1,36 +1,40 @@
-use near_sdk::json_types::U64;
-use near_sdk::store::IterableMap;
+use near_sdk::json_types::{U128, U64};
 use near_sdk::{
     env, near, require, serde_json, AccountId, Gas, NearToken, PanicOnDefault, PromiseError,
     PromiseOrValue,
 };
 
-pub mod charge_subscription;
 pub mod internal_functions;
+pub mod proxy_bet;
 pub mod signer;
 pub mod view_functions;
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
 pub struct Contract {
-    subscribers: IterableMap<AccountId, NextPaymentDue>,
-    period_length: u64,
+    subscribers: Vec<AccountId>,
     admin: AccountId,
     mpc_contract: AccountId,
+    betting_contract: AccountId,
+    vex_token_contract: AccountId,
 }
-
-type NextPaymentDue = u64; // Type alias
 
 #[near]
 impl Contract {
     #[init]
     #[private]
-    pub fn init(period_length: U64, admin: AccountId, mpc_contract: AccountId) -> Self {
+    pub fn init(
+        admin: AccountId,
+        mpc_contract: AccountId,
+        betting_contract: AccountId,
+        vex_token_contract: AccountId,
+    ) -> Self {
         Self {
-            subscribers: IterableMap::new(b"s"),
-            period_length: period_length.into(),
+            subscribers: Vec::new(),
             admin,
             mpc_contract,
+            betting_contract,
+            vex_token_contract,
         }
     }
 
@@ -39,42 +43,25 @@ impl Contract {
         let account_id = env::predecessor_account_id();
 
         // Insert the new subscription but panic if the account is already subscribed
-        if self
-            .subscribers
-            .insert(account_id, env::block_timestamp())
-            .is_some()
-        {
+        if self.subscribers.contains(&account_id) {
             panic!("You are already subscribed");
         }
+
+        self.subscribers.push(account_id);
     }
 
     pub fn end_subscription(&mut self) {
         let account_id = env::predecessor_account_id();
 
-        if self.subscribers.remove(&account_id).is_none() {
+        if !self.subscribers.contains(&account_id) {
             panic!("You are not subscribed");
         }
-    }
 
-    // Function to pay the subscription
-    // the transaction sent to call this should be signed by the MPC
-    #[payable]
-    pub fn pay_subscription(&mut self) {
-        require!(
-            env::attached_deposit() == NearToken::from_near(5),
-            "Attached deposit must be 5 NEAR"
+        self.subscribers.remove(
+            self.subscribers
+                .iter()
+                .position(|id| id == &account_id)
+                .unwrap(),
         );
-
-        let account_id = env::predecessor_account_id();
-
-        let mut next_payment_due = self.get_next_payment(&account_id);
-        require!(
-            next_payment_due <= env::block_timestamp(),
-            "Payment is not due yet"
-        );
-
-        // Update the next payment due date
-        next_payment_due += self.period_length;
-        self.subscribers.insert(account_id, next_payment_due);
     }
 }

@@ -1,35 +1,6 @@
-# subscription-example
+# twitter-betting-contract 
 
-This is a simple example showing how to use chain signatues to allow your account to be controlled by a smart contract. This example is a simple subscription service where a user can subscribe to an arbitary service and allows the admin to charge 5 NEAR from the user every month. 
+For this stage this is centralized, only the admin can call the function to proxy bet. In the future we will make this verifiable by the user needing to provide a proof or running in a verifiable agent or something.
 
-This example has some scripts to show how to interact with each part of the contract.
+TODO: Implement bet limits. This will require cross contract call from the main vex contract probably. We need to make sure the transaction lands.
 
-## Running the project
-
-You must have the [NEAR CLI](https://github.com/near/near-cli-rs/releases) installed to run this project.
-
-Enter the scripts directory and install the dependencies:
-```bash
-cd scripts
-npm install
-```
-
-To interact with the contract you will need three different accounts. A subscriber, an admin and a contract. Run the following command to create the accounts and deploy the contract:
-```bash
-npm run setup
-```
-
-To subscribe to the service run the following command:
-```bash
-npm run subscribe
-```
-
-To charge the subscriber from the admin account run the following command:
-```bash
-npm run charge
-```
-
-To unsubscribe from the service run the following command:
-```bash
-npm run unsubscribe
-```

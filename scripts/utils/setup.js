@@ -10,24 +10,44 @@ const adminAccountId = generateRandomAccountId('admin');
 const subscriberAccountId = generateRandomAccountId('subscriber');
 const contractAccountId = generateRandomAccountId('contract');
 
+// Fixed testnet contract addresses
+const mpcContractId = "v1.signer-prod.testnet";
+const bettingContractId = "betting.betvex.testnet";
+const vexTokenContractId = "token.betvex.testnet";
+
 // Run the functions
 Promise.all([createAccount(adminAccountId), createAccount(subscriberAccountId), createAccount(contractAccountId)])
     .then(() => {
-        // Save account IDs to a .env file in the current utils directory
-        const content = `SUBSCRIBER_ACCOUNT=${subscriberAccountId}\nADMIN_ACCOUNT=${adminAccountId}\nCONTRACT_ACCOUNT=${contractAccountId}\n`;
+        // Save account IDs and contract addresses to a .env file in the current utils directory
+        const content = `SUBSCRIBER_ACCOUNT=${subscriberAccountId}
+ADMIN_ACCOUNT=${adminAccountId}
+CONTRACT_ACCOUNT=${contractAccountId}
+MPC_CONTRACT=${mpcContractId}
+BETTING_CONTRACT=${bettingContractId}
+VEX_TOKEN_CONTRACT=${vexTokenContractId}`;
+
         fs.writeFileSync(envFilePath, content, 'utf8');
 
         // Log output to the console
-        console.log(`Subscriber account: ${subscriberAccountId}`);
-        console.log(`Admin account: ${adminAccountId}`);
-        console.log(`Contract account: ${contractAccountId}`);
+        console.log('Created accounts:');
+        console.log(`  Subscriber account: ${subscriberAccountId}`);
+        console.log(`  Admin account: ${adminAccountId}`);
+        console.log(`  Contract account: ${contractAccountId}`);
+        console.log('\nContract addresses:');
+        console.log(`  MPC contract: ${mpcContractId}`);
+        console.log(`  Betting contract: ${bettingContractId}`);
+        console.log(`  VEX token contract: ${vexTokenContractId}`);
 
         // Deploy the contract to the `contract` account
-        console.log(`Deploying contract to account: ${contractAccountId}`);
-        return deployContract(contractAccountId, adminAccountId);
+        console.log('\nDeploying contract...');
+        return deployContract(contractAccountId, adminAccountId, mpcContractId, bettingContractId, vexTokenContractId);
     })
     .then((deployMessage) => {
         console.log(deployMessage);
+        console.log('\nSetup completed successfully! You can now:');
+        console.log('1. Run "npm run start" to start a subscription');
+        console.log('2. Run "npm run bet" to place a bet');
+        console.log('3. Run "npm run end" to end a subscription');
     })
     .catch((error) => console.error(error));
 
@@ -37,7 +57,7 @@ function generateRandomAccountId(prefix) {
     return `${prefix}-${randomNumbers}.testnet`;
 }
 
-// Create the accounts and save the IDs
+// Create the accounts
 function createAccount(accountId) {
     return new Promise((resolve, reject) => {
         const command = `near account create-account sponsor-by-faucet-service ${accountId} autogenerate-new-keypair save-to-legacy-keychain network-config testnet create`;
@@ -54,9 +74,9 @@ function createAccount(accountId) {
 }
 
 // Deploy contract
-function deployContract(contractAccountId, adminAccountId) {
+function deployContract(contractAccountId, adminAccountId, mpcContractId, bettingContractId, vexTokenContractId) {
     return new Promise((resolve, reject) => {
-        const deployCommand = `cargo near deploy --no-docker ${contractAccountId} with-init-call init json-args '{"period_length": "2592000000000000", "admin": "${adminAccountId}", "mpc_contract": "v1.signer-prod.testnet"}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-legacy-keychain send`;
+        const deployCommand = `cargo near deploy build-non-reproducible-wasm ${contractAccountId} with-init-call init json-args '{"period_length": "2592000000000000", "admin": "${adminAccountId}", "mpc_contract": "${mpcContractId}", "betting_contract": "${bettingContractId}", "vex_token_contract": "${vexTokenContractId}"}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-legacy-keychain send`;
 
         // Set the current working directory to ../../contract to ensure the correct Cargo.toml is used
         exec(deployCommand, { cwd: path.join(__dirname, '../../contract'), shell: true }, (error, stdout, stderr) => {
@@ -64,8 +84,7 @@ function deployContract(contractAccountId, adminAccountId) {
                 console.error(`Deployment error details:\nstdout: ${stdout}\nstderr: ${stderr}`);
                 reject(`Error deploying contract to ${contractAccountId}: ${error.message}`);
             } else {
-                console.log(`Contract deployed to account: ${contractAccountId}`);
-                resolve(stdout || 'Deployment completed with no output');
+                resolve('Contract deployed successfully!');
             }
         });
     });

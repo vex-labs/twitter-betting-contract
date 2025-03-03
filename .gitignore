@@ -2,4 +2,4 @@
 /contract/Cargo.lock
 /scripts/node_modules/
 /scripts/utils/.env
-/scripts/package.lock.json
+/scripts/package-lock.json
