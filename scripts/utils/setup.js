@@ -12,8 +12,8 @@ const contractAccountId = generateRandomAccountId('contract');
 
 // Fixed testnet contract addresses
 const mpcContractId = "v1.signer-prod.testnet";
-const bettingContractId = "betting.betvex.testnet";
-const vexTokenContractId = "token.betvex.testnet";
+const bettingContractId = "vex-contract-12.testnet";
+const vexTokenContractId = "usdc.betvex.testnet";
 
 // Run the functions
 Promise.all([createAccount(adminAccountId), createAccount(subscriberAccountId), createAccount(contractAccountId)])
