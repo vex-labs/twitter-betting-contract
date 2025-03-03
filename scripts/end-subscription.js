@@ -11,10 +11,7 @@ const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(credentialsPath);
 const connectionConfig = {
   networkId: "testnet",
   keyStore: myKeyStore,
-  nodeUrl: "https://rpc.testnet.near.org",
-  walletUrl: "https://testnet.mynearwallet.com/",
-  helperUrl: "https://helper.testnet.near.org",
-  explorerUrl: "https://testnet.nearblocks.io",
+  nodeUrl: "https://test.rpc.fastnear.com",
 };
 
 // Retrieve account IDs from .env
