@@ -16,7 +16,7 @@ pub struct Contract {
     admin: AccountId,
     mpc_contract: AccountId,
     betting_contract: AccountId,
-    vex_token_contract: AccountId,
+    usdc_token_contract: AccountId,
 }
 
 #[near]
@@ -27,14 +27,14 @@ impl Contract {
         admin: AccountId,
         mpc_contract: AccountId,
         betting_contract: AccountId,
-        vex_token_contract: AccountId,
+        usdc_token_contract: AccountId,
     ) -> Self {
         Self {
             subscribers: Vec::new(),
             admin,
             mpc_contract,
             betting_contract,
-            vex_token_contract,
+            usdc_token_contract,
         }
     }
 

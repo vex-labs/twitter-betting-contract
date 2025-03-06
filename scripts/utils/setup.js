@@ -13,7 +13,7 @@ const contractAccountId = generateRandomAccountId('contract');
 // Fixed testnet contract addresses
 const mpcContractId = "v1.signer-prod.testnet";
 const bettingContractId = "vex-contract-12.testnet";
-const vexTokenContractId = "usdc.betvex.testnet";
+const usdcTokenContractId = "usdc.betvex.testnet";
 
 // Run the functions
 Promise.all([createAccount(adminAccountId), createAccount(subscriberAccountId), createAccount(contractAccountId)])
@@ -24,7 +24,7 @@ ADMIN_ACCOUNT=${adminAccountId}
 CONTRACT_ACCOUNT=${contractAccountId}
 MPC_CONTRACT=${mpcContractId}
 BETTING_CONTRACT=${bettingContractId}
-VEX_TOKEN_CONTRACT=${vexTokenContractId}`;
+USDC_TOKEN_CONTRACT=${usdcTokenContractId}`;
 
         fs.writeFileSync(envFilePath, content, 'utf8');
 
@@ -36,11 +36,11 @@ VEX_TOKEN_CONTRACT=${vexTokenContractId}`;
         console.log('\nContract addresses:');
         console.log(`  MPC contract: ${mpcContractId}`);
         console.log(`  Betting contract: ${bettingContractId}`);
-        console.log(`  VEX token contract: ${vexTokenContractId}`);
+        console.log(`  USDC token contract: ${usdcTokenContractId}`);
 
         // Deploy the contract to the `contract` account
         console.log('\nDeploying contract...');
-        return deployContract(contractAccountId, adminAccountId, mpcContractId, bettingContractId, vexTokenContractId);
+        return deployContract(contractAccountId, adminAccountId, mpcContractId, bettingContractId, usdcTokenContractId);
     })
     .then((deployMessage) => {
         console.log(deployMessage);
@@ -74,9 +74,9 @@ function createAccount(accountId) {
 }
 
 // Deploy contract
-function deployContract(contractAccountId, adminAccountId, mpcContractId, bettingContractId, vexTokenContractId) {
+function deployContract(contractAccountId, adminAccountId, mpcContractId, bettingContractId, usdcTokenContractId) {
     return new Promise((resolve, reject) => {
-        const deployCommand = `cargo near deploy build-non-reproducible-wasm ${contractAccountId} with-init-call init json-args '{"period_length": "2592000000000000", "admin": "${adminAccountId}", "mpc_contract": "${mpcContractId}", "betting_contract": "${bettingContractId}", "vex_token_contract": "${vexTokenContractId}"}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-legacy-keychain send`;
+        const deployCommand = `cargo near deploy build-non-reproducible-wasm ${contractAccountId} with-init-call init json-args '{"admin": "${adminAccountId}", "mpc_contract": "${mpcContractId}", "betting_contract": "${bettingContractId}", "usdc_token_contract": "${usdcTokenContractId}"}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-legacy-keychain send`;
 
         // Set the current working directory to ../../contract to ensure the correct Cargo.toml is used
         exec(deployCommand, { cwd: path.join(__dirname, '../../contract'), shell: true }, (error, stdout, stderr) => {

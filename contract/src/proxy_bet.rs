@@ -80,7 +80,7 @@ impl Contract {
                     .unwrap(),
             )
             .nonce(transaction_input.nonce.0)
-            .receiver_id(self.vex_token_contract.to_string())
+            .receiver_id(self.usdc_token_contract.to_string())
             .block_hash(transaction_input.block_hash.to_block_hash().unwrap())
             .actions(actions)
             .build();
